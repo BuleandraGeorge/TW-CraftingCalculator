@@ -1,0 +1,58 @@
+<div fxLayout="row">
+  <div fxFlex="33%">
+    <form [formGroup]="targetProductsForm" (ngSubmit)="handleSubmit()">
+        <div formArrayName="TargetProducts">
+            <div *ngFor="let tg of targetProducts.controls; let i = index" [formGroupName]="i">
+            <mat-form-field appearance="fill">
+                <mat-label>Product</mat-label>
+                <input
+                type="text"
+                matInput
+                formControlName="name"
+                [matAutocomplete]="auto"
+                />
+                <mat-autocomplete #auto="matAutocomplete">
+                <mat-option *ngFor="let option of filteredOptions[i] | async" [value]="option.name">
+                    {{ option.name }}
+                </mat-option>
+                </mat-autocomplete>
+            </mat-form-field>
+
+            <label>
+                <mat-label>Quantity</mat-label>
+                <input matInput formControlName="quantity" type="number" />
+            </label>
+            <label>
+            </label>
+            <button mat-button color="warn" type="button" (click)="removeMaterial(i)">Remove</button>
+            
+            </div>
+        </div>
+        <input type="checkbox" formControlName="savePlan"> Save Plan
+        <div *ngIf="targetProductsForm.get('Plan Name')">
+            <label>Plan Name:</label>
+            <input type="text" formControlName="Plan Name" />
+         </div>
+        <button type="button" (click)="addTargetProduct()">Add Product</button>
+        <button type="submit">Submit</button>
+    </form>
+  </div>
+  <div fxFlex="33%">
+        <h4>Products</h4>
+        <ul >
+            <li *ngFor="let prody of products">
+                <span>{{prody.productName}}: </span>
+                <span>{{prody.quantity}}</span>
+            </li>
+        </ul>
+    </div>
+  <div fxFlex="33%">
+    <h4>Raw Materials</h4>
+    <ul >
+        <li *ngFor="let prod of rawMaterials">
+            <span>{{prod.productName}}: </span>
+            <span>{{prod.quantity}}</span>
+        </li>
+    </ul>
+  </div>
+</div>

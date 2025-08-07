@@ -1,0 +1,35 @@
+<form [formGroup]="productForm" (ngSubmit)="handleSubmit()">
+  <label>
+    Product Name:
+    <input matInput formControlName="name" placeholder="Product Name" />
+  </label>
+
+  <div formArrayName="materials">
+    <div *ngFor="let rm of materials.controls; let i = index" [formGroupName]="i">
+      <mat-form-field appearance="fill">
+        <mat-label>Raw Material</mat-label>
+        <input
+          type="text"
+          matInput
+          formControlName="name"
+          [matAutocomplete]="auto"
+        />
+        <mat-autocomplete #auto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredOptions[i] | async" [value]="option.name">
+            {{ option.name }}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <label>
+        Quantity:
+        <input matInput formControlName="quantity" placeholder="Qty" />
+      </label>
+
+      <button type="button" (click)="removeMaterial(i)">Remove</button>
+    </div>
+  </div>
+
+  <button type="button" (click)="addMaterial()">Add Material</button>
+  <button type="submit">Submit</button>
+</form>
