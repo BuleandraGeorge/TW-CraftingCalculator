@@ -13,6 +13,7 @@ import { AbstractControl } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { PlansServices } from '../../services/plans/plansServices';
 import { NewPlan } from '../../models/NewPlan';
+import { Plan } from '../../models/Plan';
 
 @Component({
   selector: 'app-create',
@@ -36,7 +37,10 @@ export class Calculator implements OnInit{
     filteredOptions: Observable<Product[]>[] = [];
     rawMaterials:any[] = []
     products: any[] = []
-    plans: any[] =[]
+    plans: Plan[] =[]
+    selectedPlan: Observable<Plan[]>[]=[];
+    loadPlanForm: FormGroup;
+    planID: any;
 
   
     constructor(private productServices: ProductsServices,private plansServices:PlansServices, private fb: FormBuilder) {
@@ -44,8 +48,13 @@ export class Calculator implements OnInit{
         TargetProducts: this.fb.array([]),
         savePlan: [false]
         });
+        this.loadPlanForm = this.fb.group({
+          planName: this.fb.control("")
+        })
+        this.loadPlans()
         this.loadProducts()
         this.addTargetProduct()
+        this.selectPlan()
     }
     ngOnInit(): void {
       this.handleSavePlanPressed()
@@ -111,8 +120,19 @@ export class Calculator implements OnInit{
         this.gettingRawMaterials(product,numberOfProducts)
     })
     const savePlan = this.targetProductsForm.get("savePlan")?.value
-    this.savePlan2(savePlan)
+    const uploadPlan = this.targetProductsForm.get("uploadPlan")?.value
+
+    if (savePlan){
+      const result = this.plansServices.save_plan(new NewPlan(this.planFormValues.name,this.planFormValues.products))
+      result.subscribe(data=>alert(data.Message))
+    }else if (uploadPlan)
+    {
+      const result =  this.plansServices.update_plan(new Plan(this.planID,this.planFormValues.name,this.planFormValues.products))
+      result.subscribe(data=>alert(data.Message))
     }
+    
+    
+  }
 
     handleSavePlanPressed()
     {
@@ -121,38 +141,26 @@ export class Calculator implements OnInit{
       if (isChecked) {
         this.targetProductsForm.addControl('Plan Name', this.fb.control(''));
         if (this.plans.length ==0) this.plansServices.get_plans()
+        if (this.targetProductsForm.get("uploadPlan"))
+        {
+           this.targetProductsForm.get("uploadPlan")?.patchValue(false)
+        }
       }
       else this.targetProductsForm.removeControl('Plan Name');
     
       })
      
     }
-    savePlan2(savePlan:boolean)
+
+    handleUploadPlanPressed()
     {
-      console.log(savePlan)
-      if (savePlan)
-      {
-        const name = this.targetProductsForm.get("Plan Name")?.value
-        let productsPlan: any[] = []
-
-        const targetProductsArray = this.targetProductsForm.get("TargetProducts") as FormArray;
-        const targetProducts = targetProductsArray.controls.map((group: AbstractControl) => ({
-          name: group.get('name')?.value,
-          quantity: group.get('quantity')?.value
-          }))
-
-        targetProducts.forEach(targetProduct=>{
-          const filtered = this.productOptions.filter(product => product.name === targetProduct.name);
-          const product = filtered[0]
-          const numberOfProducts = Number(targetProduct.quantity)
-          productsPlan.push({
-              "product_id": product._id, 
-              "quantity": numberOfProducts
-          })
-          })
-        const result = this.plansServices.save_plan(new NewPlan(name, productsPlan))
-        result.subscribe(data=>alert(data.Message))
+      this.targetProductsForm.get("uploadPlan")!.valueChanges.subscribe((isChecked: boolean) => {
+      
+      if (isChecked) {
+        this.targetProductsForm.get("savePlan")?.patchValue(false)
       }
+      })
+     
     }
 
     getProductObject(name:string){
@@ -185,4 +193,89 @@ export class Calculator implements OnInit{
             list.push(item);
         }
         }
+    
+    
+
+    loadPlans()
+    {
+      this.plansServices.get_plans().subscribe({
+        next:(plans)=> this.plans=plans,
+        error: (err:any) => console.error('Failed to fetch products:', err)
+      })
+    }
+    selectPlan()
+    {
+        const planNameControl= this.loadPlanForm.get('planName') as FormControl;
+        const filtered = planNameControl.valueChanges.pipe(
+        startWith(''),
+        map(value =>{ return this.filterPlans(value || '') })
+        );
+        this.selectedPlan.push(filtered);
+    }
+
+    filterPlans(value: string): Plan[] {
+    const filterValue = value.toLowerCase();
+      return this.plans.filter(option =>
+        option.name.toLowerCase().includes(filterValue)
+      );
+    }
+
+    displayPlanName(plan:Plan):string{
+      return plan.name
+    }
+    handleLoadFormSubmit()
+    {
+      
+      if (!this.targetProductsForm.get("uploadPlan"))
+      {
+        this.targetProductsForm.addControl("uploadPlan", new FormControl(false))
+        this.handleUploadPlanPressed()
+      }
+      const plan = this.loadPlanForm.value.planName;
+      this.planID = plan._id
+      this.targetProductsForm.setControl("TargetProducts", this.fb.array([]))
+      plan.products.forEach((product:any) => {
+        
+        const newInput = this.newTargetProductInput
+        newInput.patchValue({
+          name: this.productOptions.filter(prod => prod._id == product.product_id)[0].name,
+          quantity: product.quantity
+        });
+        this.targetProducts.push(newInput)
+        const TargetProductsControl = newInput.get('name') as FormControl;
+        const filtered = TargetProductsControl.valueChanges.pipe(
+        startWith(''),
+        map(value =>{ return this.filterProducts(value || '') })
+        );
+        this.filteredOptions.push(filtered);
+      })
+      this.handleSubmit()
+    }
+
+    handleUpdatePlan()
+    {
+
+    }
+
+    get planFormValues():{name:string, products:any}{
+      const name = this.targetProductsForm.get("Plan Name")?.value
+        let productsPlan: any[] = []
+
+        const targetProductsArray = this.targetProductsForm.get("TargetProducts") as FormArray;
+        const targetProducts = targetProductsArray.controls.map((group: AbstractControl) => ({
+          name: group.get('name')?.value,
+          quantity: group.get('quantity')?.value
+          }))
+
+        targetProducts.forEach(targetProduct=>{
+          const filtered = this.productOptions.filter(product => product.name === targetProduct.name);
+          const product = filtered[0]
+          const numberOfProducts = Number(targetProduct.quantity)
+          productsPlan.push({
+              "product_id": product._id, 
+              "quantity": numberOfProducts
+          })
+          })
+        return {"name":name, "products":productsPlan}
+    }
 }

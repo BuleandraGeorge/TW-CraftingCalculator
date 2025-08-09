@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson.json_util import dumps
+from bson import ObjectId
 
 app = Flask(__name__)
 CORS(app)  # allow cross-origin requests from Angular
@@ -35,6 +36,32 @@ def save_plan():
 
     result = plans_collection.insert_one(data)
     return jsonify({"Message": "Successfully inserted", "id": str(result.inserted_id)})
+
+@app.route("/update-plan", methods=["POST"])
+def update_plan():
+    try:
+        # Convert plan_id string to ObjectId
+        
+
+        # Data sent from frontend (Angular form)
+        update_data = request.json
+        object_id = ObjectId(update_data["_id"])
+        del update_data["_id"]
+        # Update the plan
+        result = plans_collection.update_one(
+            {"_id": object_id},
+            {"$set": update_data}  # Only update the provided fields
+        )
+
+        if result.matched_count == 0:
+            return jsonify({"Message": "Plan not found"}), 404
+
+        return jsonify({"Message": "Plan updated successfully"}), 200
+    
+
+    except Exception as e:
+        print(e)
+        return jsonify({"Message": "Error updating plan"}), 500
 
 @app.route("/get-plans")
 def get_plans():

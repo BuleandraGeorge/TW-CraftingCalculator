@@ -28,4 +28,7 @@ export class PlansServices {
   save_plan(plan:NewPlan){
     return this.httpClient.post<{Message:string, id:string}>(`${this.apiUrl}/save-plan`,plan)
   }
+  update_plan(plan:NewPlan){
+    return this.httpClient.post<{Message:string, id:string}>(`${this.apiUrl}/update-plan`,plan)
+  }
 }
