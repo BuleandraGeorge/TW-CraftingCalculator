@@ -1,3 +1,23 @@
+<form [formGroup]="loadPlanForm" (ngSubmit)="handleLoadFormSubmit()">
+        <mat-form-field appearance="fill">
+        <mat-label>Load Existing Plan</mat-label>
+            <input 
+            type="text"
+            matInput
+            formControlName="planName"
+            [matAutocomplete]="autoCompletePlans">
+
+            <mat-autocomplete 
+                #autoCompletePlans="matAutocomplete"
+                [displayWith]="displayPlanName">
+                <mat-option *ngFor="let plan of plans " [value]="plan">
+                    {{ plan.name }}
+                </mat-option>
+            </mat-autocomplete>
+            
+        </mat-form-field>
+        <button type="submit">Load</button>
+    </form>
 <div fxLayout="row">
   <div fxFlex="33%">
     <form [formGroup]="targetProductsForm" (ngSubmit)="handleSubmit()">
@@ -39,26 +59,7 @@
         <button type="button" (click)="addTargetProduct()">Add Product</button>
         <button type="submit">Submit</button>
     </form>
-    <form [formGroup]="loadPlanForm" (ngSubmit)="handleLoadFormSubmit()">
-        <mat-form-field appearance="fill">
-        <mat-label>Load Existing Plan</mat-label>
-            <input 
-            type="text"
-            matInput
-            formControlName="planName"
-            [matAutocomplete]="autoCompletePlans">
-
-            <mat-autocomplete 
-                #autoCompletePlans="matAutocomplete"
-                [displayWith]="displayPlanName">
-                <mat-option *ngFor="let plan of plans " [value]="plan">
-                    {{ plan.name }}
-                </mat-option>
-            </mat-autocomplete>
-            
-        </mat-form-field>
-        <button type="submit">Load</button>
-    </form>
+    
   </div>
   <div fxFlex="33%">
         <h4>Products</h4>

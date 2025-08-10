@@ -1,0 +1,10 @@
+<p>farming-advisor works!</p>
+
+<ul>
+
+    @for (job of silverJobs; track job.name) {
+    <li>{{ job.name}}:{{job.location}}</li>
+    } @empty {
+    <li>There are no items.</li>
+    }
+</ul>

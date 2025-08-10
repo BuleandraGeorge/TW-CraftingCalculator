@@ -67,6 +67,7 @@ export class Calculator implements OnInit{
     }
     
     addTargetProduct(){
+        console.log("merge")
         const newInput = this.newTargetProductInput
         this.targetProducts.push(newInput)
         const TargetProductsControl = newInput.get('name') as FormControl;
