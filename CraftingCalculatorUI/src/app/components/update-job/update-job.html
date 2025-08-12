@@ -1,1 +1,62 @@
-<p>update-job works!</p>
+<form [formGroup]="jobForm">
+  <!-- Step 1: Job Picker -->
+  <mat-form-field appearance="fill">
+    <mat-label>Job</mat-label>
+    <input
+      type="text"
+      matInput
+      formControlName="job"
+      [matAutocomplete]="auto"
+    />
+    <mat-autocomplete
+      #auto="matAutocomplete"
+      [displayWith]="displayJob"
+    >
+      <mat-option *ngFor="let job of filteredJobs | async" [value]="job">
+        {{ job.name }}
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <!-- Button for fetching details -->
+  <button mat-raised-button color="primary" type="button" (click)="loadJobSubmit()">
+    Load Details
+  </button>
+
+  <!-- Step 2: Show rest of form after loading -->
+  <div *ngIf="jobLoaded">
+    <mat-form-field appearance="fill">
+      <mat-label>Job Name</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+
+    <!-- Drops Array -->
+    <div formArrayName="drops">
+      <div *ngFor="let dropCtrl of drops.controls; let i = index" [formGroupName]="i" class="drop-row">
+        <mat-form-field appearance="fill">
+          <mat-label>Product</mat-label>
+          <mat-select formControlName="product_id">
+            <mat-option *ngFor="let product of products" [value]="product._id">
+              {{ product.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Drop Rate</mat-label>
+          <input type="number" matInput formControlName="drop_rate" />
+        </mat-form-field>
+         <button mat-icon-button color="warn" type="button" (click)="removeDrop(i)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+    <button mat-raised-button color="accent" type="button" (click)="addDrop()">
+      Add Drop
+    </button>
+    <!-- Update button -->
+    <button mat-raised-button color="accent" type="button" (click)="updateJobSubmit()">
+      Update Job
+    </button>
+  </div>
+</form>
