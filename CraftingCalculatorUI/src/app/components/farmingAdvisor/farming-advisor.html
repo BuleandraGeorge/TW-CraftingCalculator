@@ -1,10 +1,27 @@
 <p>farming-advisor works!</p>
 
-<ul>
-
-    @for (job of silverJobs; track job.name) {
-    <li>{{ job.name}}:{{job.location}}</li>
-    } @empty {
-    <li>There are no items.</li>
-    }
-</ul>
+<form [formGroup] = "selectPlanForm">
+    <mat-form-field appearance="fill">
+    <mat-label>
+        Plan Name:
+    </mat-label>
+    <input
+        type="text"
+        matInput
+        formControlName  = "plan"
+        [matAutocomplete] = "auto"
+    >
+    <mat-autocomplete #auto = "matAutocomplete" [displayWith]="displayPlanName">
+        <mat-option *ngFor="let plan of filteredPlans | async" [value]="plan">
+            {{plan.name}}
+        </mat-option>
+    </mat-autocomplete>
+    </mat-form-field>
+    <button mat-raised-button color="primary" type="button" (click)="loadPlanSubmit()">
+        Load Plan For Farming
+    </button>
+    <h4>Products to farm</h4>
+    <ul>
+        <li *ngFor="let rawMaterial of rawMaterials"> {{rawMaterial.productName}}:{{rawMaterial.quantity}}</li>
+    </ul>
+</form>

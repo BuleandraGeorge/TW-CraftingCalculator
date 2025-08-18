@@ -3,6 +3,7 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from bson.json_util import dumps
 from bson import ObjectId
+import json
 
 app = Flask(__name__)
 CORS(app)  # allow cross-origin requests from Angular
@@ -12,6 +13,7 @@ client = MongoClient("mongodb+srv://adminTWCraftingCalculator:8ku10vK8ZTYyq3Rg@c
 db = client["TW-Crafting-Calculator"]
 products_collection = db["Products"]
 plans_collection = db["Plans"]
+jobs_collection = db["Jobs"]
 
 
 @app.route("/")
@@ -99,6 +101,58 @@ def get_products():
         'name': product['name'],
         'composition': product.get('composition', [])
     } for product in products])
+
+@app.route("/update-jobs-list", methods=["POST"])
+def update_jobs_list():
+    data = request.json
+    response = {
+        "data":"",
+        "error":""
+    }
+    if not data:
+        response["error"] = "Error: {data}"
+        return dumps(response), 400
+    for job_name in data:
+        jobs_collection.update_one(
+            {"name": job_name}, 
+            {"$setOnInsert": {"name": job_name}}, 
+            upsert=True
+            )
+    response["data"] = "The New Jobs Have Been Added"
+    return response, 200
+
+@app.route("/get-jobs", methods=["GET"])
+def get_jobs():
+    jobs = list(jobs_collection.find())
+    return dumps([
+        {
+        "id": str(job["_id"]),
+        "name": job["name"],
+        "drops":job.get("drops",[]),
+        } for job in jobs
+    ])
+        
+
+@app.route("/update-job", methods=["POST"])
+def update_job():
+
+    data = request.json
+    response = {
+        "data":"",
+        "error":""
+    }
+    if not data:
+        response["error"] = "No data received"
+        return response, 500
+    print(data)
+    jobs_collection.update_one(
+            {"_id": ObjectId(data["id"])},
+            {"$set": data}
+        )
+
+    response["data"] = f"{data["name"]} has been update"
+    return response, 200
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
